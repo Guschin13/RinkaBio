@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rinkameri</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+    background:#000;
+    color:#fff;
+    font-family:'Segoe UI',system-ui,sans-serif;
+    height:100vh;
+    overflow:hidden;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    perspective:1200px;
+}
+
+canvas{
+    position:fixed;
+    inset:0;
+    z-index:-2;
+}
+
+/* CONTENT */
+.content{
+    text-align:center;
+    transform-style:preserve-3d;
+}
+
+/* AVATAR */
+.avatar{
+    width:150px;
+    height:150px;
+    border-radius:50%;
+    object-fit:cover;
+    border:1px solid rgba(255,255,255,.15);
+    margin-bottom:1.3rem;
+}
+
+/* NAME */
+.name{
+    font-size:2.7rem;
+    font-weight:700;
+    margin-bottom:.35rem;
+    background:linear-gradient(120deg,#9b7bff,#6fdcff,#ff7ad9,#9b7bff);
+    background-size:300%;
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+/* SUB */
+.subtitle{
+    font-size:.9rem;
+    letter-spacing:4px;
+    text-transform:uppercase;
+    color:#aaa;
+    margin-bottom:2.4rem;
+}
+
+/* BUTTONS */
+.buttons{
+    display:grid;
+    gap:1.3rem;
+    margin-bottom:3.3rem;
+}
+
+.btn{
+    padding:1rem 2.4rem;
+    border-radius:999px;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.14);
+    color:white;
+    text-decoration:none;
+    font-size:1.1rem;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    backdrop-filter:blur(6px);
+}
+
+/* FOOTER */
+.love{
+    position:fixed;
+    bottom:18px;
+    width:100%;
+    text-align:center;
+    font-size:.85rem;
+    letter-spacing:1px;
+    color:rgba(255,255,255,.45);
+}
+
+/* ===== ULTRA GLOW ===== */
+.glow .name{
+    text-shadow:
+        0 0 25px rgba(160,120,255,.9),
+        0 0 60px rgba(120,90,255,.7);
+}
+.glow .avatar{
+    box-shadow:
+        0 0 35px rgba(180,140,255,.8),
+        0 0 100px rgba(120,90,255,.45);
+}
+.glow .btn{
+    box-shadow:0 0 30px rgba(170,130,255,.6);
+}
+
+/* ===== ULTRA PERFORMANCE ===== */
+.performance .name{
+    text-shadow:none;
+}
+.performance .avatar{
+    box-shadow:none;
+}
+.performance .btn{
+    box-shadow:none;
+    backdrop-filter:none;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="content">
+    <!-- 🔴 ВСТАВЬ СВОЁ ФОТО -->
+    <img src="IMG_1732.jpeg" class="avatar">
+
+    <div class="name">Rinkameri</div>
+    <div class="subtitle">Digital Creator</div>
+
+    <div class="buttons">
+        <a class="btn" href="https://t.me/RinkaBio" target="_blank">
+            <i class="fab fa-telegram-plane"></i> Telegram
+        </a>
+        <a class="btn" href="https://www.tiktok.com/@rinkameri?_r=1&_t=ZN-943mGAmxEep" target="_blank">
+            <i class="fab fa-tiktok"></i> TikTok
+        </a>
+    </div>
+</div>
+
+<div class="love">I love my girl</div>
+
+<script>
+/* ===== MODE ===== */
+const FORCE_MODE = "auto"; // auto | glow | performance
+
+function detectMode(){
+    if(FORCE_MODE!=="auto") return FORCE_MODE;
+    const ua=navigator.userAgent;
+    if(ua.includes("TikTok")||navigator.hardwareConcurrency<=4){
+        return "performance";
+    }
+    return "glow";
+}
+
+document.body.classList.add(detectMode());
+
+/* ===== STARFIELD ===== */
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,5000);
+camera.position.z=1;
+
+const renderer=new THREE.WebGLRenderer({canvas:stars,alpha:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+
+const starCount=document.body.classList.contains("performance")?6000:14000;
+const geometry=new THREE.BufferGeometry();
+const pos=[];
+
+for(let i=0;i<starCount;i++){
+    pos.push(
+        (Math.random()-.5)*4000,
+        (Math.random()-.5)*4000,
+        (Math.random()-.5)*4000
+    );
+}
+geometry.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));
+
+const material=new THREE.PointsMaterial({
+    color:0xffffff,
+    size:document.body.classList.contains("performance")?.9:1.2,
+    transparent:true,
+    opacity:.85
+});
+
+const starsPoints=new THREE.Points(geometry,material);
+scene.add(starsPoints);
+
+function animate(){
+    requestAnimationFrame(animate);
+    starsPoints.rotation.y+=.0002;
+    starsPoints.rotation.x+=.0001;
+    renderer.render(scene,camera);
+}
+animate();
+
+/* ===== ANIMATIONS ===== */
+if(!document.body.classList.contains("performance")){
+    gsap.to(".name",{backgroundPosition:"300%",repeat:-1,duration:5,ease:"linear"});
+    gsap.to(".avatar",{y:-16,repeat:-1,yoyo:true,duration:4,ease:"sine.inOut"});
+}
+
+/* PARALLAX */
+document.addEventListener("mousemove",e=>{
+    const x=(innerWidth/2-e.clientX)/35;
+    const y=(innerHeight/2-e.clientY)/35;
+    gsap.to(".content",{rotationY:x,rotationX:y,duration:1});
+});
+
+/* GYROSCOPE */
+window.addEventListener("deviceorientation",e=>{
+    const x=e.gamma/7;
+    const y=e.beta/7;
+    gsap.to(".content",{rotationY:x,rotationX:y,duration:.5});
+});
+</script>
+
+</body>
+</html>
