@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <title>merinkaq</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #000;
+      --text: #f4f4f6;
+      --muted: #9a9aa6;
+      --accent: #9bb8f0;
+      --radius: 24px;
+      --card-max: 360px;
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-l: env(safe-area-inset-left, 0px);
+      --safe-r: env(safe-area-inset-right, 0px);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    #sky {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      background: #000;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: max(16px, var(--safe-t)) max(16px, var(--safe-r)) max(16px, var(--safe-b)) max(16px, var(--safe-l));
+    }
+
+    /* ===== Жидкое стекло ===== */
+    .card {
+      position: relative;
+      width: 100%;
+      max-width: var(--card-max);
+      background:
+        linear-gradient(
+          155deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          rgba(255, 255, 255, 0.03) 40%,
+          rgba(255, 255, 255, 0.06) 100%
+        ),
+        rgba(10, 10, 14, 0.42);
+      backdrop-filter: blur(32px) saturate(1.5) brightness(1.08);
+      -webkit-backdrop-filter: blur(32px) saturate(1.5) brightness(1.08);
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      padding: 28px 24px 22px;
+      box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.5),
+        0 28px 72px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+        inset 1px 0 0 rgba(255, 255, 255, 0.07),
+        inset -1px 0 0 rgba(255, 255, 255, 0.03);
+      transform-style: preserve-3d;
+      transform: perspective(900px) rotateX(0) rotateY(0) translateY(32px) scale(0.92);
+      opacity: 0;
+      filter: blur(8px);
+      will-change: transform, opacity, filter;
+      isolation: isolate;
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.4) 0%,
+        rgba(255, 255, 255, 0.08) 28%,
+        rgba(255, 255, 255, 0.03) 55%,
+        rgba(255, 255, 255, 0.2) 100%
+      );
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .card.is-in {
+      animation: cardIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes cardIn {
+      to {
+        opacity: 1;
+        filter: blur(0);
+        transform: perspective(900px) rotateX(0) rotateY(0) translateY(0) scale(1);
+      }
+    }
+
+    @property --angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1.5px;
+      background: conic-gradient(
+        from var(--angle),
+        transparent 0%,
+        transparent 55%,
+        rgba(255, 255, 255, 0.6) 72%,
+        rgba(155, 184, 240, 0.5) 82%,
+        transparent 100%
+      );
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0.9;
+      z-index: 3;
+      animation: spinBorder 4.5s linear infinite;
+    }
+
+    @keyframes spinBorder {
+      to { --angle: 360deg; }
+    }
+
+    .card-glow {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background:
+        radial-gradient(
+          circle 180px at var(--gx, 50%) var(--gy, 25%),
+          rgba(255, 255, 255, 0.14),
+          rgba(255, 255, 255, 0.04) 35%,
+          transparent 65%
+        );
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      z-index: 1;
+      mix-blend-mode: soft-light;
+    }
+    .card:hover .card-glow { opacity: 1; }
+
+    .glass-shine {
+      position: absolute;
+      top: 0;
+      left: 6%;
+      right: 6%;
+      height: 45%;
+      border-radius: var(--radius) var(--radius) 45% 45%;
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.12) 0%,
+        rgba(255, 255, 255, 0.03) 45%,
+        transparent 100%
+      );
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.75;
+      animation: shineBreathe 5s ease-in-out infinite;
+    }
+    @keyframes shineBreathe {
+      0%, 100% { opacity: 0.55; }
+      50% { opacity: 0.85; }
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* ===== Фото ===== */
+    .avatar-wrap {
+      position: relative;
+      width: 112px;
+      height: 112px;
+      margin-bottom: 20px;
+      transform: scale(0.5) rotate(-18deg);
+      opacity: 0;
+    }
+    .avatar-wrap.is-in {
+      animation: avatarSpring 1s cubic-bezier(0.34, 1.6, 0.64, 1) 0.15s forwards;
+    }
+    @keyframes avatarSpring {
+      0% { transform: scale(0.5) rotate(-18deg); opacity: 0; }
+      60% { transform: scale(1.06) rotate(3deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+
+    .avatar-float {
+      width: 100%;
+      height: 100%;
+      animation: floatY 3.8s ease-in-out infinite;
+    }
+    @keyframes floatY {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      33% { transform: translateY(-8px) rotate(1deg); }
+      66% { transform: translateY(-3px) rotate(-0.8deg); }
+    }
+
+    .avatar-glow {
+      position: absolute;
+      inset: -18px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(155, 184, 240, 0.32) 0%, transparent 65%);
+      animation: pulseGlow 2.8s ease-in-out infinite;
+      z-index: 0;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.45; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.12); }
+    }
+
+    .avatar-ring {
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      background: conic-gradient(
+        from 0deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.5) 5%,
+        transparent 14%,
+        transparent 45%,
+        rgba(155, 184, 240, 0.5) 52%,
+        transparent 62%
+      );
+      animation: spinRing 6s linear infinite;
+      z-index: 1;
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #fff calc(100% - 1px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #fff calc(100% - 1px));
+    }
+    @keyframes spinRing {
+      to { transform: rotate(360deg); }
+    }
+
+    .avatar-ring-2 {
+      position: absolute;
+      inset: -14px;
+      border-radius: 50%;
+      background: conic-gradient(
+        from 180deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.25) 4%,
+        transparent 12%,
+        transparent 70%,
+        rgba(155, 184, 240, 0.3) 78%,
+        transparent 88%
+      );
+      animation: spinRingRev 11s linear infinite;
+      z-index: 1;
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #fff calc(100% - 0.5px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #fff calc(100% - 0.5px));
+      opacity: 0.7;
+    }
+    @keyframes spinRingRev {
+      to { transform: rotate(-360deg); }
+    }
+
+    .orbit {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px dashed rgba(255, 255, 255, 0.22);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .orbit-1 {
+      inset: -22px;
+      animation: orbitSpin 11s linear infinite;
+    }
+    .orbit-2 {
+      inset: -34px;
+      animation: orbitSpinRev 17s linear infinite;
+    }
+    .orbit-3 {
+      inset: -46px;
+      border-style: dotted;
+      border-color: rgba(255, 255, 255, 0.12);
+      animation: orbitSpin 24s linear infinite;
+    }
+    @keyframes orbitSpin { to { transform: rotate(360deg); } }
+    @keyframes orbitSpinRev { to { transform: rotate(-360deg); } }
+
+    .orbit-dot {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 12px 3px rgba(155, 184, 240, 0.8);
+      top: 0;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: dotPulse 2s ease-in-out infinite;
+    }
+    .orbit-2 .orbit-dot {
+      width: 4px;
+      height: 4px;
+      animation-delay: 0.6s;
+    }
+    .orbit-3 .orbit-dot {
+      width: 3px;
+      height: 3px;
+      box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.5);
+      animation-delay: 1.2s;
+    }
+    @keyframes dotPulse {
+      0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.4); }
+    }
+
+    .avatar {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      display: block;
+      z-index: 3;
+      background: #16161a;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    .avatar-fallback {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #1e1e24, #121216);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      font-weight: 500;
+      color: #c4c4ce;
+      z-index: 3;
+      letter-spacing: -0.02em;
+    }
+    .avatar-fallback.show { display: flex; }
+
+    /* ===== Имя ===== */
+    .name {
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: center;
+      gap: 0;
+    }
+    .name span {
+      display: inline-block;
+      opacity: 0;
+      transform: rotateX(90deg) translateY(8px);
+      transform-origin: bottom;
+      animation: letterIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .name.is-wave span {
+      animation: letterWave 2.8s ease-in-out infinite;
+    }
+    @keyframes letterIn {
+      to { opacity: 1; transform: rotateX(0) translateY(0); }
+    }
+    @keyframes letterWave {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-4px) scale(1.03); }
+    }
+
+    /* ===== Подпись hz ===== */
+    .tagline-wrap {
+      min-height: 1.5em;
+      margin-bottom: 18px;
+      position: relative;
+    }
+    .tagline {
+      font-size: 1rem;
+      color: var(--muted);
+      line-height: 1.4;
+      letter-spacing: 0.08em;
+      font-weight: 400;
+      position: relative;
+      display: inline-block;
+    }
+    .tagline .hz-char {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(6px);
+      animation: hzIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .tagline .cursor {
+      display: inline-block;
+      width: 1.5px;
+      height: 1em;
+      background: var(--muted);
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: blink 0.85s step-end infinite;
+    }
+    @keyframes hzIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+    .tagline.is-live {
+      animation: hzGlow 3s ease-in-out infinite;
+    }
+    @keyframes hzGlow {
+      0%, 100% { color: var(--muted); text-shadow: none; }
+      50% { color: #b0b0bc; text-shadow: 0 0 12px rgba(155, 184, 240, 0.25); }
+    }
+
+    /* ===== Кнопка копирования ===== */
+    .copy-btn {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      font-size: 0.78rem;
+      padding: 8px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      margin-bottom: 22px;
+      position: relative;
+      overflow: hidden;
+      transition: color 0.25s, border-color 0.25s, background 0.25s, box-shadow 0.3s, transform 0.2s;
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .copy-btn:hover {
+      color: var(--text);
+      border-color: rgba(255, 255, 255, 0.32);
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
+      transform: scale(1.03);
+    }
+    .copy-btn:active { transform: scale(0.97); }
+    .copy-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .copy-btn .shine {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.25) 50%, transparent 75%);
+      transform: translateX(-120%);
+      pointer-events: none;
+    }
+    .copy-btn:hover .shine {
+      animation: shinePass 0.6s ease;
+    }
+    @keyframes shinePass {
+      to { transform: translateX(120%); }
+    }
+
+    /* ===== Ссылки ===== */
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+    .link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 15px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text);
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(16px) scale(0.96);
+      transition: background 0.25s, border-color 0.25s, box-shadow 0.3s, transform 0.2s;
+      -webkit-tap-highlight-color: transparent;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .link.is-in {
+      animation: linkIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes linkIn {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .link:nth-child(1) { animation-delay: 0.5s; }
+    .link:nth-child(2) { animation-delay: 0.65s; }
+
+    .link:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.22);
+      box-shadow: 0 0 32px rgba(155, 184, 240, 0.16);
+    }
+    .link:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .link-icon {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+    .link-icon svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+    .link:hover .link-icon {
+      animation: iconBounce 0.55s cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+    @keyframes iconBounce {
+      0% { transform: scale(1) rotate(0); }
+      35% { transform: scale(1.2) rotate(-10deg); }
+      60% { transform: scale(0.95) rotate(4deg); }
+      100% { transform: scale(1) rotate(0); }
+    }
+
+    .link-text {
+      flex: 1;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .link-title {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    .link-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .link-arrow {
+      width: 18px;
+      height: 18px;
+      opacity: 0.4;
+      transition: transform 0.3s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.25s;
+      flex-shrink: 0;
+    }
+    .link:hover .link-arrow {
+      transform: translateX(6px);
+      opacity: 0.95;
+    }
+    .link-arrow svg {
+      width: 100%;
+      height: 100%;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .link .shine {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.15) 50%, transparent 80%);
+      transform: translateX(-130%);
+      pointer-events: none;
+    }
+    .link:hover .shine {
+      animation: shinePass 0.65s ease;
+    }
+
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(0);
+      animation: rippleOut 0.6s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes rippleOut {
+      to { transform: scale(3); opacity: 0; }
+    }
+
+    .footer-nick {
+      margin-top: 20px;
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.22);
+      letter-spacing: 0.06em;
+      animation: footerFade 4s ease-in-out infinite;
+    }
+    @keyframes footerFade {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    .trail-dot {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.55);
+      pointer-events: none;
+      z-index: 100;
+      transform: translate(-50%, -50%);
+      animation: trailFade 0.5s ease-out forwards;
+      box-shadow: 0 0 6px rgba(155, 184, 240, 0.4);
+    }
+    @keyframes trailFade {
+      to { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+    }
+
+    .spark {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.7);
+      pointer-events: none;
+      z-index: 5;
+      animation: sparkOut 0.7s ease-out forwards;
+    }
+    @keyframes sparkOut {
+      0% { opacity: 1; transform: translate(0, 0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(0); }
+    }
+
+    @media (min-width: 480px) {
+      :root { --card-max: 380px; }
+      .card { padding: 32px 28px 24px; }
+      .avatar-wrap { width: 120px; height: 120px; }
+    }
+
+    @media (hover: none) {
+      .card-glow { display: none; }
+      .copy-btn:hover .shine,
+      .link:hover .shine { animation: none; }
+      .link:hover .link-icon { animation: none; }
+      .link:hover .link-arrow { transform: none; }
+      .link:hover {
+        box-shadow: none;
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+      .copy-btn:hover {
+        color: var(--muted);
+        border-color: rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: none;
+        transform: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .card, .avatar-wrap, .avatar-float, .avatar-glow,
+      .avatar-ring, .avatar-ring-2, .orbit-1, .orbit-2, .orbit-3,
+      .name span, .link, .card::before, .glass-shine,
+      .footer-nick, .orbit-dot, .tagline {
+        animation: none !important;
+        transition: none !important;
+      }
+      .card { opacity: 1; filter: none; transform: none; }
+      .avatar-wrap { opacity: 1; transform: none; }
+      .name span { opacity: 1; transform: none; }
+      .link { opacity: 1; transform: none; }
+      .tagline .cursor { animation: none; }
+      .avatar-float { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="sky" aria-hidden="true"></canvas>
+
+  <div class="page">
+    <main class="card" id="card" role="main">
+      <div class="glass-shine" aria-hidden="true"></div>
+      <div class="card-glow" id="cardGlow"></div>
+      <div class="card-inner">
+        <div class="avatar-wrap" id="avatarWrap">
+          <div class="avatar-glow"></div>
+          <div class="avatar-ring"></div>
+          <div class="avatar-ring-2"></div>
+          <div class="orbit orbit-1"><span class="orbit-dot"></span></div>
+          <div class="orbit orbit-2"><span class="orbit-dot"></span></div>
+          <div class="orbit orbit-3"><span class="orbit-dot"></span></div>
+          <div class="avatar-float">
+            <img class="avatar" id="avatar" src="img.png" alt="Фото профиля merinkaq" width="120" height="120">
+            <div class="avatar-fallback" id="avatarFallback" aria-hidden="true">M</div>
+          </div>
+        </div>
+
+        <h1 class="name" id="name" aria-label="merinkaq"></h1>
+
+        <div class="tagline-wrap">
+          <p class="tagline" id="tagline" aria-live="polite"></p>
+        </div>
+
+        <button type="button" class="copy-btn" id="copyBtn" aria-label="Скопировать ник @merinkaq">
+          <span class="shine"></span>
+          <span class="copy-label">скопировать ник @merinkaq</span>
+        </button>
+
+        <nav class="links" aria-label="Социальные сети">
+          <a class="link" href="https://www.tiktok.com/@merinkaq" target="_blank" rel="noopener noreferrer">
+            <span class="shine"></span>
+            <span class="link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.16 15.3a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.73a8.18 8.18 0 0 0 4.76 1.52V6.84a4.84 4.84 0 0 1-1.01-.15z"/></svg>
+            </span>
+            <span class="link-text">
+              <span class="link-title">TikTok</span>
+              <span class="link-sub">@merinkaq</span>
+            </span>
+            <span class="link-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </a>
+
+          <a class="link" href="https://t.me/merinkaq" target="_blank" rel="noopener noreferrer">
+            <span class="shine"></span>
+            <span class="link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 6.82-1.65 7.78c-.12.55-.45.68-.91.42l-2.52-1.86-1.22 1.17c-.13.14-.25.25-.5.25l.18-2.56 4.67-4.22c.2-.18-.04-.28-.31-.1l-5.77 3.63-2.49-.78c-.54-.17-.55-.54.11-.8l9.74-3.76c.45-.16.84.1.7.74z"/></svg>
+            </span>
+            <span class="link-text">
+              <span class="link-title">Telegram</span>
+              <span class="link-sub">@merinkaq</span>
+            </span>
+            <span class="link-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </a>
+        </nav>
+
+        <p class="footer-nick">merinkaq</p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const avatar = document.getElementById('avatar');
+      const fallback = document.getElementById('avatarFallback');
+      avatar.addEventListener('error', function () {
+        avatar.style.display = 'none';
+        fallback.classList.add('show');
+      });
+
+      const nameEl = document.getElementById('name');
+      const nameText = 'merinkaq';
+      nameText.split('').forEach(function (ch, i) {
+        const span = document.createElement('span');
+        span.textContent = ch;
+        span.style.animationDelay = (0.28 + i * 0.05) + 's';
+        nameEl.appendChild(span);
+      });
+      setTimeout(function () {
+        if (!reducedMotion) nameEl.classList.add('is-wave');
+        nameEl.querySelectorAll('span').forEach(function (s, i) {
+          s.style.animationDelay = (i * 0.08) + 's';
+        });
+      }, 1100);
+
+      /* Подпись — только hz */
+      const taglineEl = document.getElementById('tagline');
+      function showHz() {
+        if (reducedMotion) {
+          taglineEl.textContent = 'hz';
+          return;
+        }
+        taglineEl.innerHTML = '';
+        const chars = 'hz'.split('');
+        chars.forEach(function (ch, i) {
+          const span = document.createElement('span');
+          span.className = 'hz-char';
+          span.textContent = ch;
+          span.style.animationDelay = (0.7 + i * 0.12) + 's';
+          taglineEl.appendChild(span);
+        });
+        const cursor = document.createElement('span');
+        cursor.className = 'cursor';
+        taglineEl.appendChild(cursor);
+        setTimeout(function () {
+          taglineEl.classList.add('is-live');
+        }, 1200);
+      }
+      showHz();
+
+      const copyBtn = document.getElementById('copyBtn');
+      const copyLabel = copyBtn.querySelector('.copy-label');
+      let copyReset = null;
+      copyBtn.addEventListener('click', function () {
+        const nick = '@merinkaq';
+        function showCopied() {
+          copyLabel.textContent = 'скопировано';
+          clearTimeout(copyReset);
+          copyReset = setTimeout(function () {
+            copyLabel.textContent = 'скопировать ник @merinkaq';
+          }, 1200);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(nick).then(showCopied).catch(fallbackCopy);
+        } else {
+          fallbackCopy();
+        }
+        function fallbackCopy() {
+          const ta = document.createElement('textarea');
+          ta.value = nick;
+          ta.style.cssText = 'position:fixed;left:-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); } catch (e) {}
+          document.body.removeChild(ta);
+          showCopied();
+        }
+      });
+
+      const card = document.getElementById('card');
+      const avatarWrap = document.getElementById('avatarWrap');
+      const links = document.querySelectorAll('.link');
+
+      requestAnimationFrame(function () {
+        card.classList.add('is-in');
+        avatarWrap.classList.add('is-in');
+        links.forEach(function (l) { l.classList.add('is-in'); });
+      });
+
+      let tiltX = 0, tiltY = 0;
+      let targetTiltX = 0, targetTiltY = 0;
+      const maxTilt = 10;
+      let gyroEnabled = false;
+      let gyroAsked = false;
+      let lastSpark = 0;
+
+      function applyTilt() {
+        if (reducedMotion) return;
+        tiltX += (targetTiltX - tiltX) * 0.1;
+        tiltY += (targetTiltY - tiltY) * 0.1;
+        card.style.transform = 'perspective(900px) rotateX(' + tiltX + 'deg) rotateY(' + tiltY + 'deg)';
+      }
+
+      card.addEventListener('mousemove', function (e) {
+        if (window.matchMedia('(hover: none)').matches) return;
+        const rect = card.getBoundingClientRect();
+        const cx = (e.clientX - rect.left) / rect.width - 0.5;
+        const cy = (e.clientY - rect.top) / rect.height - 0.5;
+        targetTiltY = cx * maxTilt * 2;
+        targetTiltX = -cy * maxTilt * 2;
+        const glow = document.getElementById('cardGlow');
+        glow.style.setProperty('--gx', (e.clientX - rect.left) + 'px');
+        glow.style.setProperty('--gy', (e.clientY - rect.top) + 'px');
+
+        const now = performance.now();
+        if (!reducedMotion && now - lastSpark > 80) {
+          lastSpark = now;
+          const spark = document.createElement('span');
+          spark.className = 'spark';
+          const ox = e.clientX - rect.left;
+          const oy = e.clientY - rect.top;
+          spark.style.left = ox + 'px';
+          spark.style.top = oy + 'px';
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 20 + Math.random() * 35;
+          spark.style.setProperty('--sx', Math.cos(angle) * dist + 'px');
+          spark.style.setProperty('--sy', Math.sin(angle) * dist + 'px');
+          card.appendChild(spark);
+          setTimeout(function () { spark.remove(); }, 700);
+        }
+      });
+      card.addEventListener('mouseleave', function () {
+        targetTiltX = 0;
+        targetTiltY = 0;
+      });
+
+      function enableGyro() {
+        if (gyroAsked || reducedMotion) return;
+        gyroAsked = true;
+        if (typeof DeviceOrientationEvent !== 'undefined' &&
+            typeof DeviceOrientationEvent.requestPermission === 'function') {
+          DeviceOrientationEvent.requestPermission()
+            .then(function (state) {
+              if (state === 'granted') {
+                gyroEnabled = true;
+                window.addEventListener('deviceorientation', onOrient);
+              }
+            })
+            .catch(function () {});
+        } else if (typeof DeviceOrientationEvent !== 'undefined') {
+          gyroEnabled = true;
+          window.addEventListener('deviceorientation', onOrient);
+        }
+      }
+      function onOrient(e) {
+        if (!gyroEnabled) return;
+        const beta = e.beta || 0;
+        const gamma = e.gamma || 0;
+        targetTiltX = Math.max(-maxTilt, Math.min(maxTilt, (beta - 40) * 0.15));
+        targetTiltY = Math.max(-maxTilt, Math.min(maxTilt, gamma * 0.2));
+      }
+      document.body.addEventListener('touchstart', enableGyro, { once: true, passive: true });
+
+      links.forEach(function (link) {
+        link.addEventListener('mousemove', function (e) {
+          if (window.matchMedia('(hover: none)').matches) return;
+          const rect = link.getBoundingClientRect();
+          const x = e.clientX - rect.left - rect.width / 2;
+          const y = e.clientY - rect.top - rect.height / 2;
+          link.style.transform = 'translate(' + (x * 0.08) + 'px, ' + (y * 0.1) + 'px)';
+        });
+        link.addEventListener('mouseleave', function () {
+          link.style.transform = '';
+        });
+      });
+
+      function createRipple(e, el) {
+        const rect = el.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height) * 1.3;
+        const cx = e.clientX || (e.touches && e.touches[0].clientX) || rect.left + rect.width / 2;
+        const cy = e.clientY || (e.touches && e.touches[0].clientY) || rect.top + rect.height / 2;
+        const x = cx - rect.left - size / 2;
+        const y = cy - rect.top - size / 2;
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        el.appendChild(ripple);
+        setTimeout(function () { ripple.remove(); }, 650);
+      }
+      document.querySelectorAll('.link, .copy-btn').forEach(function (el) {
+        el.addEventListener('pointerdown', function (e) {
+          createRipple(e, el);
+        });
+      });
+
+      let lastTrail = 0;
+      document.addEventListener('mousemove', function (e) {
+        if (reducedMotion || window.matchMedia('(hover: none)').matches) return;
+        const now = performance.now();
+        if (now - lastTrail < 40) return;
+        lastTrail = now;
+        const dot = document.createElement('div');
+        dot.className = 'trail-dot';
+        dot.style.left = e.clientX + 'px';
+        dot.style.top = e.clientY + 'px';
+        document.body.appendChild(dot);
+        setTimeout(function () { dot.remove(); }, 520);
+      });
+
+      /* ===== Canvas ===== */
+      const canvas = document.getElementById('sky');
+      const ctx = canvas.getContext('2d');
+      let stars = [];
+      let falling = [];
+      let flashes = [];
+      let w = 0, h = 0, dpr = 1;
+      let lastTime = 0;
+      let mouseX = -9999, mouseY = -9999;
+      let nextFall = 0;
+      let nextFlash = 0;
+
+      function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        w = window.innerWidth;
+        h = window.innerHeight;
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        initStars();
+      }
+
+      function initStars() {
+        const area = w * h;
+        const count = Math.min(90, Math.max(40, Math.floor(area / 11000)));
+        stars = [];
+        for (let i = 0; i < count; i++) {
+          stars.push(makeStar(true));
+        }
+      }
+
+      function makeStar(randomY) {
+        const size = Math.random() < 0.14 ? (1.8 + Math.random() * 1.6) : (0.5 + Math.random() * 1.2);
+        const bright = size > 1.7;
+        return {
+          x: Math.random() * w,
+          y: randomY ? Math.random() * h : -8 - Math.random() * 50,
+          size: size,
+          baseAlpha: 0.28 + Math.random() * 0.62,
+          alpha: 0,
+          phase: Math.random() * Math.PI * 2,
+          life: Math.random(),
+          lifeSpeed: 0.06 + Math.random() * 0.14,
+          speed: 5 + Math.random() * 26,
+          twinkle: 0.3 + Math.random() * 0.7,
+          hasRays: bright && Math.random() > 0.3,
+          glow: bright
+        };
+      }
+
+      function makeFalling() {
+        return {
+          x: Math.random() * w,
+          y: -30 - Math.random() * 50,
+          vx: 50 + Math.random() * 160,
+          vy: 180 + Math.random() * 340,
+          alpha: 1,
+          life: 0
+        };
+      }
+
+      function makeFlash() {
+        return {
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: 0,
+          maxR: 12 + Math.random() * 22,
+          alpha: 1
+        };
+      }
+
+      document.addEventListener('mousemove', function (e) {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+      });
+
+      function drawStar(s, boost) {
+        const a = Math.min(1, s.alpha * s.baseAlpha * (1 + boost * 1.0));
+        if (a < 0.02) return;
+        const sz = s.size * (1 + boost * 0.45);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, sz, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,' + a + ')';
+        ctx.fill();
+        if (s.glow) {
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, sz * 4, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(200,220,255,' + (a * 0.22) + ')';
+          ctx.fill();
+        }
+        if (s.hasRays && a > 0.3) {
+          const rayA = a * 0.55 * (0.5 + 0.5 * Math.sin(s.phase * 3.2));
+          ctx.strokeStyle = 'rgba(255,255,255,' + rayA + ')';
+          ctx.lineWidth = 0.5;
+          const rayLen = sz * 6 + 3;
+          ctx.beginPath();
+          ctx.moveTo(s.x - rayLen, s.y);
+          ctx.lineTo(s.x + rayLen, s.y);
+          ctx.moveTo(s.x, s.y - rayLen);
+          ctx.lineTo(s.x, s.y + rayLen);
+          const d = rayLen * 0.65;
+          ctx.moveTo(s.x - d, s.y - d);
+          ctx.lineTo(s.x + d, s.y + d);
+          ctx.moveTo(s.x + d, s.y - d);
+          ctx.lineTo(s.x - d, s.y + d);
+          ctx.stroke();
+        }
+      }
+
+      function tick(now) {
+        if (!lastTime) lastTime = now;
+        let dt = (now - lastTime) / 1000;
+        lastTime = now;
+        if (dt > 0.05) dt = 0.05;
+
+        ctx.clearRect(0, 0, w, h);
+
+        if (reducedMotion) {
+          for (let i = 0; i < stars.length; i++) {
+            const s = stars[i];
+            s.alpha = 1;
+            drawStar(s, 0);
+          }
+          requestAnimationFrame(tick);
+          return;
+        }
+
+        for (let i = 0; i < stars.length; i++) {
+          const s = stars[i];
+          s.life += s.lifeSpeed * dt;
+          if (s.life < 0.15) {
+            s.alpha = s.life / 0.15;
+          } else if (s.life < 0.7) {
+            s.alpha = 1;
+          } else if (s.life < 1) {
+            s.alpha = 1 - (s.life - 0.7) / 0.3;
+          } else {
+            s.x = Math.random() * w;
+            s.y = -6 - Math.random() * 40;
+            s.life = 0;
+            s.alpha = 0;
+            s.phase = Math.random() * Math.PI * 2;
+          }
+          s.y += s.speed * dt;
+          s.phase += dt * s.twinkle;
+          const tw = 0.8 + 0.2 * Math.sin(s.phase);
+          s.alpha *= tw;
+
+          const dx = s.x - mouseX;
+          const dy = s.y - mouseY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const boost = dist < 110 ? (1 - dist / 110) : 0;
+
+          if (s.y > h + 25) s.life = 1;
+          drawStar(s, boost);
+        }
+
+        if (now > nextFall) {
+          falling.push(makeFalling());
+          if (Math.random() > 0.6) falling.push(makeFalling());
+          nextFall = now + 1500 + Math.random() * 1800;
+        }
+        for (let i = falling.length - 1; i >= 0; i--) {
+          const f = falling[i];
+          f.x += f.vx * dt;
+          f.y += f.vy * dt;
+          f.life += dt;
+          f.alpha = Math.max(0, 1 - f.life / 1.2);
+          const tailX = f.x - f.vx * 0.05;
+          const tailY = f.y - f.vy * 0.05;
+          const grad = ctx.createLinearGradient(f.x, f.y, tailX, tailY);
+          grad.addColorStop(0, 'rgba(255,255,255,' + f.alpha + ')');
+          grad.addColorStop(0.5, 'rgba(200,220,255,' + (f.alpha * 0.5) + ')');
+          grad.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.beginPath();
+          ctx.moveTo(f.x, f.y);
+          ctx.lineTo(tailX, tailY);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 1.8;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(f.x, f.y, 1.6, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,255,255,' + f.alpha + ')';
+          ctx.fill();
+          if (f.alpha <= 0 || f.y > h + 60 || f.x > w + 60) falling.splice(i, 1);
+        }
+
+        if (now > nextFlash) {
+          flashes.push(makeFlash());
+          nextFlash = now + 1400 + Math.random() * 1600;
+        }
+        for (let i = flashes.length - 1; i >= 0; i--) {
+          const fl = flashes[i];
+          fl.r += 48 * dt;
+          fl.alpha = Math.max(0, 1 - fl.r / fl.maxR);
+          ctx.beginPath();
+          ctx.arc(fl.x, fl.y, fl.r * 0.25, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,255,255,' + (fl.alpha * 0.95) + ')';
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(fl.x, fl.y, fl.r, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(180,200,255,' + (fl.alpha * 0.18) + ')';
+          ctx.fill();
+          if (fl.alpha > 0.2) {
+            ctx.strokeStyle = 'rgba(255,255,255,' + (fl.alpha * 0.5) + ')';
+            ctx.lineWidth = 0.7;
+            const rl = fl.r * 2;
+            ctx.beginPath();
+            ctx.moveTo(fl.x - rl, fl.y);
+            ctx.lineTo(fl.x + rl, fl.y);
+            ctx.moveTo(fl.x, fl.y - rl);
+            ctx.lineTo(fl.x, fl.y + rl);
+            const d = rl * 0.7;
+            ctx.moveTo(fl.x - d, fl.y - d);
+            ctx.lineTo(fl.x + d, fl.y + d);
+            ctx.moveTo(fl.x + d, fl.y - d);
+            ctx.lineTo(fl.x - d, fl.y + d);
+            ctx.stroke();
+          }
+          if (fl.alpha <= 0) flashes.splice(i, 1);
+        }
+
+        applyTilt();
+        requestAnimationFrame(tick);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      nextFall = performance.now() + 1000;
+      nextFlash = performance.now() + 600;
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body>
+</html>
